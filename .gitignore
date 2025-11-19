@@ -1,0 +1,94 @@
+# Node / JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json # optionnel selon politique du repo
+.pnpm-store/
+.pnp.*
+/dist/
+/build/
+/out/
+/.next/
+/.cache/
+/.vite/
+*.log
+
+# Env files
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# TypeScript
+*.tsbuildinfo
+
+# React / frontend caches
+/.parcel-cache/
+/.cache/
+public/build/
+
+# Python virtual envs & artifacts
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+.pytest_cache/
+.mypy_cache/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+
+# Databases / local data
+*.sqlite
+*.sqlite3
+*.db
+*.sql
+*.bak
+
+# Logs, coverage
+coverage/
+coverage.* 
+*.lcov
+.nyc_output/
+*.coverage
+
+# Docker
+docker-compose.override.yml
+.env.docker
+tmp/
+*.pid
+
+# IDEs / editors
+.idea/
+*.iml
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CI / editors / tools
+/.history/
+.cache/
+hooks/
+
+# Optional: lockfiles / package managers (uncomment if you want to ignore them)
+# yarn.lock
+# pnpm-lock.yaml
+
+# Keep this repo-specific ignore rules below
+# /my-local-secret.file
