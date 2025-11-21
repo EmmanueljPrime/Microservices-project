@@ -1,6 +1,9 @@
+// frontend/app/page.tsx
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function LoginPage() {
     const [username, setU] = useState('')
@@ -13,7 +16,6 @@ export default function LoginPage() {
         setL(true)
         setErr('')
 
-        // Appel à l’API Gateway (sera implémenté dans une étape ultérieure)
         const res = await fetch('/api/auth-login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -30,52 +32,52 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-8">
-                <h1 className="text-2xl font-semibold text-center mb-6 text-gray-800">
-                    Connexion
-                </h1>
+        <main className="min-h-screen flex items-center justify-center bg-background">
+            <Card className="w-full max-w-md rounded-2xl shadow-sm border bg-card">
+                <CardContent className="p-8">
+                    <h1 className="text-2xl font-semibold text-center mb-6 text-foreground">
+                        Connexion
+                    </h1>
 
-                <form onSubmit={onSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nom d’utilisateur
-                        </label>
-                        <input type="text"
-                               value={username}
-                               onChange={(e) => setU(e.target.value)}
-                               placeholder="john.doe"
-                               required
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
-                    </div>
+                    <form onSubmit={onSubmit} className="space-y-4" aria-busy={loading}>
+                        <div>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                Nom d’utilisateur
+                            </label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setU(e.target.value)}
+                                placeholder="john.doe"
+                                required
+                                disabled={loading}
+                                className="w-full px-3 py-2 border rounded-lg bg-transparent border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Mot de passe
-                        </label>
-                        <input type="password"
-                               value={password}
-                               onChange={(e) => setP(e.target.value)}
-                               placeholder="••••••••"
-                               required
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
-                    </div>
+                        <div>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                Mot de passe
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setP(e.target.value)}
+                                placeholder="••••••••"
+                                required
+                                disabled={loading}
+                                className="w-full px-3 py-2 border rounded-lg bg-transparent border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                        </div>
 
-                    {err && <p className="text-sm text-red-600">{err}</p>}
+                        {err && <p className="text-sm text-destructive">{err}</p>}
 
-                    <button type="submit"
-                            disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg
-            font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        {loading ? 'Connexion...' : 'Se connecter'}
-                    </button>
-                </form>
-            </div>
+                        <Button type="submit" disabled={loading} className="w-full">
+                            {loading ? 'Connexion...' : 'Se connecter'}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
         </main>
     )
 }
