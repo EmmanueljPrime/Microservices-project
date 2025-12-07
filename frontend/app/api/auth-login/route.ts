@@ -7,7 +7,6 @@ import { cookies } from 'next/headers'
  */
 export async function POST(request: Request) {
     const cookieStore = await cookies()
-
     try {
         const body = await request.json()
         const { username, password } = body

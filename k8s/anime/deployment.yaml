@@ -1,0 +1,53 @@
+# 1. Déploiement pour anime-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anime-service
+  labels:
+    app: anime-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anime-service
+  template:
+    metadata:
+      labels:
+        app: anime-service
+    spec:
+      containers:
+        - name: anime-service
+          image: emmanueljprime/anime-service:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DATABASE_URL
+              value: "file:/app/prisma/dev.db"
+            - name: JWT_SECRET
+              value: "change-me"
+            - name: PORT
+              value: "5000"
+          
+          # Vérifie si le service fonctionne
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          
+          # Vérifie si le service est prêt
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          
+          volumeMounts:
+            - name: anime-db
+              mountPath: /app/prisma
+      
+      volumes:
+        - name: anime-db
+          emptyDir: {}

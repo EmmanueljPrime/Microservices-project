@@ -3,14 +3,17 @@ kind: Ingress
 metadata:
   name: devops-ingress
   namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
+  ingressClassName: nginx
   rules:
     - host: devops.local
       http:
         paths:
           # 1) Auth-service : /auth → FastAPI
-          - path: /auth
-            pathType: Prefix
+          - path: /auth(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: auth-service
@@ -18,17 +21,26 @@ spec:
                   number: 8000
 
           # 2) Order-service : /orders → NestJS
-          - path: /orders
-            pathType: Prefix
+          - path: /orders(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: order-service
                 port:
                   number: 4000
-
-          # 3) Frontend : tout le reste → Next.js
-          - path: /
-            pathType: Prefix
+                  
+          # 3) Anime-service : /animes → NestJS
+          - path: /animes(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: anime-service
+                port:
+                  number: 5000
+          
+          # 4) Frontend : tout le reste → Next.js
+          - path: /()(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: frontend

@@ -5,9 +5,10 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Loader2, MoreVertical } from "lucide-react"
 
 type Anime = {
     mal_id: number
@@ -28,10 +29,30 @@ export default function ExplorePage() {
     const [limit] = useState<number>(24)
     const [query, setQuery] = useState<string>("")
     const [hasNext, setHasNext] = useState<boolean>(false)
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const [statuses, setStatuses] = useState<Record<number, 'à regarder' | 'en cours' | 'terminé'>>({});
+
 
     useEffect(() => {
         loadAnimes()// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page])
+
+    useEffect(() => {
+        // Charger les statuts depuis localStorage
+        const savedList = localStorage.getItem('myAnimeList')
+        if (savedList) {
+            try {
+                const parsed = JSON.parse(savedList)
+                const statusMap: Record<number, 'à regarder' | 'en cours' | 'terminé'> = {}
+                parsed.forEach((anime: any) => {
+                    statusMap[anime.mal_id] = anime.status
+                })
+                setStatuses(statusMap)
+            } catch (err) {
+                console.error('Failed to load statuses', err)
+            }
+        }
+    }, [])
 
     async function loadAnimes(search = false) {
         setLoading(true)
@@ -50,6 +71,36 @@ export default function ExplorePage() {
             setLoading(false)
         }
     }
+
+    // Fonction pour gérer le changement de statut
+    function handleSetStatus(id: number, status: 'à regarder' | 'en cours' | 'terminé', e: React.MouseEvent) {
+        e.stopPropagation();
+        setStatuses((prev) => ({ ...prev, [id]: status }));
+        setOpenMenuId(null);
+        
+        // Sauvegarder dans localStorage
+        const savedList = localStorage.getItem('myAnimeList')
+        const animeList = savedList ? JSON.parse(savedList) : []
+        
+        // Trouver l'anime complet dans la liste actuelle
+        const anime = animes.find(a => a.mal_id === id)
+        if (!anime) return
+        
+        // Vérifier si l'anime existe déjà dans la liste
+        const existingIndex = animeList.findIndex((a: Anime) => a.mal_id === id)
+        
+        if (existingIndex !== -1) {
+            // Mettre à jour le statut
+            animeList[existingIndex] = { ...animeList[existingIndex], status }
+        } else {
+            // Ajouter l'anime avec son statut
+            animeList.push({ ...anime, status })
+        }
+        
+        localStorage.setItem('myAnimeList', JSON.stringify(animeList))
+        console.log(`Anime ID ${id} status set to ${status}`)
+    }
+
 
     function onSearch(e?: React.FormEvent<HTMLFormElement>) {
         e?.preventDefault()
@@ -154,10 +205,58 @@ export default function ExplorePage() {
                             {animes.map((anime) => (
                                 <Card
                                     key={anime.mal_id}
-                                    className="group cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl border-border/50 bg-card/50 overflow-hidden"
+                                    className="group cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl py-0 gap-0 border-border/50 bg-card/50 overflow-hidden"
                                     onClick={() => router.push(`/explorer/${anime.mal_id}`)}
                                 >
-                                    <div className="aspect-[3/4] relative overflow-hidden bg-muted">
+                                    <div className="aspect-3/4 relative overflow-hidden bg-muted">
+                                    {/* Bouton dropdown en haut à gauche - à placer dans la div aspect-[3/4] relative */}
+<div className="absolute top-2 left-2 z-10">
+    <DropdownMenu
+        open={openMenuId === anime.mal_id}
+        onOpenChange={(open) => setOpenMenuId(open ? anime.mal_id : null)}
+    >
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 rounded-md bg-card/90 hover:bg-card border border-border/50 hover:border-border shadow-sm cursor-pointer transition-all"
+                                                onClick={(e) => {
+                                                    // Empêche la navigation du Card parent
+                                                    e.stopPropagation()
+                                                }}
+                                            >
+                                                <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                                            </Button>
+                                        </DropdownMenuTrigger>        <DropdownMenuContent
+            align="start"
+            onClick={(e) => e.stopPropagation()}
+            className="w-44 border-border/50 shadow-lg"
+        >
+            <DropdownMenuItem
+                onClick={(e: React.MouseEvent) => handleSetStatus(anime.mal_id, 'à regarder', e)}
+                className="cursor-pointer text-sm font-medium"
+            >
+                À regarder
+                {statuses[anime.mal_id] === 'à regarder' && <span className="ml-auto text-primary">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+                onClick={(e: React.MouseEvent) => handleSetStatus(anime.mal_id, 'en cours', e)}
+                className="cursor-pointer text-sm font-medium"
+            >
+                En cours
+                {statuses[anime.mal_id] === 'en cours' && <span className="ml-auto text-primary">✓</span>}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+                onClick={(e: React.MouseEvent) => handleSetStatus(anime.mal_id, 'terminé', e)}
+                className="cursor-pointer text-sm font-medium"
+            >
+                Terminé
+                {statuses[anime.mal_id] === 'terminé' && <span className="ml-auto text-primary">✓</span>}
+            </DropdownMenuItem>
+        </DropdownMenuContent>
+    </DropdownMenu>
+</div>
+
                                         {anime.images?.webp?.image_url ? (
                                             <img
                                                 src={anime.images.webp.image_url || "/placeholder.svg"}

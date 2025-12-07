@@ -50,8 +50,11 @@ export function Navbar() {
                         <a href="/explorer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                             Explorer
                         </a>
-                        <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                            Stats
+                        <a href="/my-list" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            My List
+                        </a>
+                        <a href="/documentation" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            Api Docs
                         </a>
                     </div>
 
@@ -95,6 +98,12 @@ export function Navbar() {
                             className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                         >
                             Explorer
+                        </a>
+                        <a
+                            href="/my-list"
+                            className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                        >
+                            My List
                         </a>
                         <a
                             href="#"

@@ -1,12 +1,14 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    Post,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AnimesService } from './animes.service';
 import { CreateAnimeDto } from './dto/create-anime.dto';
@@ -20,26 +22,34 @@ import { User } from '../auth/user.decorator';
 @Controller('animes')
 @UseGuards(JwtAuthGuard)
 export class AnimesController {
-    constructor(private readonly animesService: AnimesService) {}
+  constructor(private readonly animesService: AnimesService) {}
 
-    @Post()
-    create(@User() user: any, @Body() dto: CreateAnimeDto) {
-        return this.animesService.create(user.sub, dto);
-    }
+  @Post()
+  create(@User() user: any, @Body() dto: CreateAnimeDto) {
+    return this.animesService.create(user.sub, dto);
+  }
 
-    @Get()
-    findAll(@User() user: any) {
-        return this.animesService.findAll(user.sub);
-    }
+  @Get()
+  findAll(@User() user: any, @Query('status') status?: string) {
+    return this.animesService.findAll(user.sub, status);
+  }
 
-    @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number, @User() user: any) {
-        return this.animesService.findOne(id, user.sub);
-    }
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number, @User() user: any) {
+      return this.animesService.findOne(id, user.sub);
+  }
 
-    @Delete(':id')
-    remove(@Param('id', ParseIntPipe) id: number, @User() user: any) {
-        return this.animesService.remove(id, user.sub);
-    }
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @User() user: any,
+    @Body('status') status: string,
+  ) {
+    return this.animesService.updateStatus(id, user.sub, status);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number, @User() user: any) {
+    return this.animesService.remove(id, user.sub);
+  }
 }
-

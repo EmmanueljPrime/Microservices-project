@@ -6,10 +6,8 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, Library, Flame, CheckCircle2, Clock, BookmarkPlus } from "lucide-react"
+import { Star, Library, Flame, CheckCircle2, BookmarkPlus } from "lucide-react"
 
 interface Anime {
     id?: number
@@ -25,22 +23,47 @@ interface Anime {
     createdAt?: string
 }
 
+type AnimeWithStatus = {
+    mal_id: number
+    title: string
+    score?: number
+    images?: { webp?: { image_url?: string } }
+    synopsis?: string
+    status: 'à regarder' | 'en cours' | 'terminé'
+}
+
 export default function Dashboard() {
     const router = useRouter()
     const [totalJikan, setTotalJikan] = useState<number | null>(null);
     const [animes, setAnimes] = useState<Anime[]>([])
     const [publicPreview, setPublicPreview] = useState<Anime[]>([])
     const [publicCount, setPublicCount] = useState<number | null>(null)
-    const [formData, setFormData] = useState({
-        malId: "",
-        title: "",
-    })
+    const [toWatchCount, setToWatchCount] = useState<number>(0)
+    const [watchingCount, setWatchingCount] = useState<number>(0)
+    const [completedCount, setCompletedCount] = useState<number>(0)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
-    const [creating, setCreating] = useState(false)
     const [addingId, setAddingId] = useState<number | null>(null)
     const [ratingAnime, setRatingAnime] = useState<number | null>(null)
     const [ratingValue, setRatingValue] = useState<number>(0)
+
+    const loadAnimeCounts = () => {
+        try {
+            const savedList = localStorage.getItem('myAnimeList')
+            if (savedList) {
+                const parsed: AnimeWithStatus[] = JSON.parse(savedList)
+                const toWatch = parsed.filter((a) => a.status === 'à regarder').length
+                const watching = parsed.filter((a) => a.status === 'en cours').length
+                const completed = parsed.filter((a) => a.status === 'terminé').length
+                
+                setToWatchCount(toWatch)
+                setWatchingCount(watching)
+                setCompletedCount(completed)
+            }
+        } catch (err) {
+            console.error('Failed to load anime counts', err)
+        }
+    }
 
     const loadTotalJikan = async () => {
         try{
@@ -64,24 +87,24 @@ export default function Dashboard() {
         }
     }
 
-    const loadAnimes = async () => {
-        try {
-            const res = await fetch("/api/animes")
-            if (!res.ok) {
-                if (res.status === 401) {
-                    window.location.href = "/login"
-                    return
-                }
-                throw new Error("fetch failed")
-            }
-            const data = await res.json()
-            setAnimes(data)
-            setLoading(false)
-        } catch {
-            setError("Impossible de charger vos animes")
-            setLoading(false)
-        }
-    }
+    // const loadAnimes = async () => {
+    //     try {
+    //         const res = await fetch("/api/animes")
+    //         if (!res.ok) {
+    //             if (res.status === 401) {
+    //                 window.location.href = "/login"
+    //                 return
+    //             }
+    //             throw new Error("fetch failed")
+    //         }
+    //         const data = await res.json()
+    //         setAnimes(data)
+    //         setLoading(false)
+    //     } catch {
+    //         setError("Impossible de charger vos animes")
+    //         setLoading(false)
+    //     }
+    // }
 
     const loadPublic = async () => {
         try {
@@ -106,36 +129,12 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
+        loadAnimeCounts()
         loadTotalJikan()
-        loadAnimes()
         loadPublic()
     }, [])
 
-    const createAnime = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!formData.malId.trim()) return
 
-        setCreating(true)
-        const res = await fetch("/api/animes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                malId: Number.parseInt(formData.malId),
-                title: formData.title || `Anime ${formData.malId}`,
-                status: "watchlist",
-            }),
-        })
-        setCreating(false)
-
-        if (res.ok) {
-            setFormData({ malId: "", title: "" })
-            loadAnimes()
-        } else if (res.status === 401) {
-            window.location.href = "/login"
-        } else {
-            alert("Erreur lors de la création")
-        }
-    }
 
     const addFavorite = async (anime: Anime) => {
         if (!anime || !anime.malId) return
@@ -156,7 +155,7 @@ export default function Dashboard() {
             })
             setAddingId(null)
             if (res.ok) {
-                loadAnimes()
+                // loadAnimes()
             } else if (res.status === 401) {
                 window.location.href = "/login"
             }
@@ -186,7 +185,7 @@ export default function Dashboard() {
 
         const res = await fetch(`/api/animes/${id}`, { method: "DELETE" })
         if (res.ok) {
-            loadAnimes()
+            // loadAnimes()
         } else if (res.status === 401) {
             window.location.href = "/login"
         }
@@ -217,7 +216,7 @@ export default function Dashboard() {
                         <Button
                             onClick={() => {
                                 setError("")
-                                loadAnimes()
+                                //loadAnimes()
                                 loadPublic()
                             }}
                             variant="destructive"
@@ -265,8 +264,8 @@ export default function Dashboard() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-foreground">{animes.length}</div>
-                            <p className="text-xs text-muted-foreground mt-1">Animes dans votre collection</p>
+                            <div className="text-3xl font-bold text-foreground">{toWatchCount}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Animes à regarder</p>
                         </CardContent>
                     </Card>
 
@@ -278,7 +277,7 @@ export default function Dashboard() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-foreground">{watching.length}</div>
+                            <div className="text-3xl font-bold text-foreground">{watchingCount}</div>
                             <p className="text-xs text-muted-foreground mt-1">Actuellement en visionnage</p>
                         </CardContent>
                     </Card>
@@ -291,46 +290,10 @@ export default function Dashboard() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-foreground">{completed.length}</div>
+                            <div className="text-3xl font-bold text-foreground">{completedCount}</div>
                             <p className="text-xs text-muted-foreground mt-1">Animes terminés</p>
                         </CardContent>
                     </Card>
-                </div>
-
-                {/* Quick Add Form */}
-                <Card className="bg-card/30 border-border">
-                    <CardHeader>
-                        <CardTitle>Ajouter un anime rapidement</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={createAnime} className="flex gap-2">
-                            <Input
-                                type="number"
-                                placeholder="Entrez le MAL ID (ex: 1)"
-                                value={formData.malId}
-                                onChange={(e) => setFormData({ ...formData, malId: e.target.value })}
-                                required
-                                className="flex-1"
-                            />
-                            <Button type="submit" disabled={creating} className="cursor-pointer">
-                                {creating ? "Ajout..." : "+ Ajouter"}
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-
-                {/* Navigation Links */}
-                <div className="flex flex-wrap gap-3 justify-center">
-                    <Button onClick={() => router.push("/explore")} variant="outline" className="cursor-pointer">
-                        🔍 Explorer la bibliothèque
-                    </Button>
-                    <Button
-                        onClick={() => document.getElementById("collection")?.scrollIntoView()}
-                        variant="outline"
-                        className="cursor-pointer"
-                    >
-                        ⭐ Voir ma collection
-                    </Button>
                 </div>
 
                 {/* Aperçu des animes publics */}
@@ -395,196 +358,122 @@ export default function Dashboard() {
                     </div>
                 )}
 
-                {/* Collection d'animes avec onglets */}
-                <div id="collection" className="space-y-4">
+                {/* Section Activité Récente */}
+                <div className="space-y-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-foreground mb-2">Ma collection</h2>
-                        <p className="text-muted-foreground text-sm">Organisez vos animes en différentes catégories</p>
+                        <h2 className="text-2xl font-bold text-foreground mb-2">Activité récente</h2>
+                        <p className="text-muted-foreground text-sm">Les derniers animes ajoutés à votre liste</p>
                     </div>
 
-                    {animes.length === 0 ? (
+                    {toWatchCount === 0 && watchingCount === 0 && completedCount === 0 ? (
                         <Card className="text-center py-16 border-border/50">
                             <CardContent>
-                                <div className="text-6xl mb-4">📚</div>
-                                <CardTitle className="mb-2">Votre collection est vide</CardTitle>
-                                <p className="text-muted-foreground mb-6">Commencez par ajouter vos premiers animes favoris</p>
-                                <Button onClick={() => router.push("/explore")} className="cursor-pointer">
-                                    Découvrir des animes
+                                <div className="text-6xl mb-4">🎬</div>
+                                <CardTitle className="mb-2">Commencez votre aventure</CardTitle>
+                                <p className="text-muted-foreground mb-6">
+                                    Ajoutez vos premiers animes et suivez votre progression
+                                </p>
+                                <Button onClick={() => router.push("/explorer")} className="cursor-pointer">
+                                    Explorer la bibliothèque
                                 </Button>
                             </CardContent>
                         </Card>
                     ) : (
-                        <Tabs defaultValue="watchlist" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3 bg-muted/30">
-                                <TabsTrigger value="watchlist" className="cursor-pointer">
-                                    <Clock className="w-4 h-4 mr-2" />À regarder ({watchlist.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="watching" className="cursor-pointer">
-                                    <Flame className="w-4 h-4 mr-2" />
-                                    En cours ({watching.length})
-                                </TabsTrigger>
-                                <TabsTrigger value="completed" className="cursor-pointer">
-                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                    Terminés ({completed.length})
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="watchlist" className="space-y-4 mt-6">
-                                {watchlist.length === 0 ? (
-                                    <Card className="text-center py-8 border-border/50">
-                                        <CardContent>
-                                            <p className="text-muted-foreground">Aucun anime dans votre watchlist</p>
-                                        </CardContent>
-                                    </Card>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                        {watchlist.map((anime) => (
-                                            <AnimeCard
-                                                key={anime.id}
-                                                anime={anime}
-                                                onRate={updateAnimeRating}
-                                                onDelete={deleteAnime}
-                                                onRate2={setRatingAnime}
-                                                router={router}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Progression personnelle */}
+                            <Card className="border-border/50 bg-card/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <Flame className="w-5 h-5 text-chart-1" />
+                                        Votre progression
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Animes terminés</span>
+                                            <span className="font-semibold text-foreground">{completedCount}</span>
+                                        </div>
+                                        <div className="w-full bg-muted rounded-full h-2">
+                                            <div
+                                                className="bg-chart-4 h-2 rounded-full transition-all"
+                                                style={{ 
+                                                    width: `${(completedCount / (toWatchCount + watchingCount + completedCount)) * 100}%` 
+                                                }}
                                             />
-                                        ))}
+                                        </div>
                                     </div>
-                                )}
-                            </TabsContent>
-
-                            <TabsContent value="watching" className="space-y-4 mt-6">
-                                {watching.length === 0 ? (
-                                    <Card className="text-center py-8 border-border/50">
-                                        <CardContent>
-                                            <p className="text-muted-foreground">Aucun anime en visionnage</p>
-                                        </CardContent>
-                                    </Card>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                        {watching.map((anime) => (
-                                            <AnimeCard
-                                                key={anime.id}
-                                                anime={anime}
-                                                onRate={updateAnimeRating}
-                                                onDelete={deleteAnime}
-                                                onRate2={setRatingAnime}
-                                                router={router}
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">En cours de visionnage</span>
+                                            <span className="font-semibold text-foreground">{watchingCount}</span>
+                                        </div>
+                                        <div className="w-full bg-muted rounded-full h-2">
+                                            <div
+                                                className="bg-chart-1 h-2 rounded-full transition-all"
+                                                style={{ 
+                                                    width: `${(watchingCount / (toWatchCount + watchingCount + completedCount)) * 100}%` 
+                                                }}
                                             />
-                                        ))}
+                                        </div>
                                     </div>
-                                )}
-                            </TabsContent>
+                                    <div className="pt-3 border-t border-border">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm font-medium">Total dans votre liste</span>
+                                            <span className="text-2xl font-bold text-primary">
+                                                {toWatchCount + watchingCount + completedCount}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                            <TabsContent value="completed" className="space-y-4 mt-6">
-                                {completed.length === 0 ? (
-                                    <Card className="text-center py-8 border-border/50">
-                                        <CardContent>
-                                            <p className="text-muted-foreground">Aucun anime terminé</p>
-                                        </CardContent>
-                                    </Card>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                        {completed.map((anime) => (
-                                            <AnimeCard
-                                                key={anime.id}
-                                                anime={anime}
-                                                onRate={updateAnimeRating}
-                                                onDelete={deleteAnime}
-                                                onRate2={setRatingAnime}
-                                                router={router}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </TabsContent>
-                        </Tabs>
+                            {/* Actions rapides */}
+                            <Card className="border-border/50 bg-card/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <Star className="w-5 h-5 text-yellow-500" />
+                                        Actions rapides
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <Button
+                                        onClick={() => router.push("/explorer")}
+                                        variant="outline"
+                                        className="w-full justify-start cursor-pointer"
+                                    >
+                                        <Library className="w-4 h-4 mr-2" />
+                                        Découvrir de nouveaux animes
+                                    </Button>
+                                    <Button
+                                        onClick={() => router.push("/my-list")}
+                                        variant="outline"
+                                        className="w-full justify-start cursor-pointer"
+                                    >
+                                        <BookmarkPlus className="w-4 h-4 mr-2" />
+                                        Gérer ma liste
+                                    </Button>
+                                    {watchingCount > 0 && (
+                                        <div className="pt-2 border-t border-border">
+                                            <p className="text-sm text-muted-foreground mb-2">
+                                                Vous avez {watchingCount} anime{watchingCount > 1 ? 's' : ''} en cours
+                                            </p>
+                                            <Button
+                                                onClick={() => router.push("/my-list")}
+                                                size="sm"
+                                                className="w-full cursor-pointer"
+                                            >
+                                                Continuer à regarder
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
                     )}
                 </div>
             </main>
         </div>
-    )
-}
-
-function AnimeCard({
-                       anime,
-                       onRate,
-                       onDelete,
-                       onRate2,
-                       router
-                   }: {
-    anime: Anime
-    onRate: (id: number, rating: number) => void
-    onDelete: (id: number) => void
-    onRate2: (id: number | null) => void
-    router: ReturnType<typeof useRouter>
-}) {
-    return (
-        <Card className="group transition-all duration-200 hover:shadow-lg border-border/50 bg-card/50 overflow-hidden">
-            <div
-                className="aspect-[3/4] relative overflow-hidden bg-muted cursor-pointer"
-                onClick={() => router.push(`/anime/${anime.malId}`)}
-            >
-                {anime.image ? (
-                    <img
-                        src={anime.image || "/placeholder.svg"}
-                        alt={anime.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-4xl">📺</span>
-                    </div>
-                )}
-                {anime.score && (
-                    <Badge className="absolute top-2 right-2 bg-yellow-600/90 hover:bg-yellow-600 text-white border-0">
-                        ⭐ {anime.score}
-                    </Badge>
-                )}
-                {anime.userRating && (
-                    <Badge className="absolute top-2 left-2 bg-primary/90 hover:bg-primary text-primary-foreground border-0">
-                        ✨ {anime.userRating}/10
-                    </Badge>
-                )}
-            </div>
-            <CardContent className="p-4 space-y-3">
-                <div>
-                    <CardTitle className="line-clamp-2 text-base text-foreground">{anime.title}</CardTitle>
-                </div>
-                {anime.synopsis && <p className="text-muted-foreground text-sm line-clamp-2">{anime.synopsis}</p>}
-                <div className="flex gap-1 flex-wrap">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                            key={star}
-                            onClick={() => onRate(anime.id!, star)}
-                            className="cursor-pointer hover:scale-110 transition-transform"
-                        >
-                            <Star
-                                className={`w-4 h-4 ${
-                                    (anime.userRating || 0) >= star ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-                                }`}
-                            />
-                        </button>
-                    ))}
-                </div>
-                <div className="flex gap-2 pt-2">
-                    {anime.url && (
-                        <Button variant="outline" size="sm" className="flex-1 cursor-pointer text-xs h-8 bg-transparent" asChild>
-                            <a href={anime.url} target="_blank" rel="noopener noreferrer">
-                                🔗 MAL
-                            </a>
-                        </Button>
-                    )}
-                    <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => onDelete(anime.id!)}
-                        className="flex-1 cursor-pointer text-xs h-8"
-                    >
-                        🗑️
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
     )
 }
 

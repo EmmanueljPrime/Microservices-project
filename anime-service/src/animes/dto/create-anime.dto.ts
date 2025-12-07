@@ -1,28 +1,40 @@
-import { IsNotEmpty, IsString, IsInt, IsOptional, IsUrl, IsNumber, IsPositive } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsInt,
+  IsOptional,
+  IsUrl,
+  IsNumber,
+  IsPositive,
+} from 'class-validator';
 
 export class CreateAnimeDto {
-    @IsInt()
-    @IsPositive()
-    @IsNotEmpty()
-    malId: number;
+  @IsInt()
+  @IsPositive()
+  @IsNotEmpty()
+  malId: number;
 
-    @IsString()
-    @IsNotEmpty()
-    title: string;
+  @IsString()
+  @IsNotEmpty()
+  title: string;
 
-    @IsOptional()
-    @IsString()
-    image?: string;
+  @IsOptional()
+  @IsString()
+  image?: string;
 
-    @IsOptional()
-    @IsUrl()
-    url?: string;
+  @IsOptional()
+  @IsUrl()
+  url?: string;
 
-    @IsOptional()
-    @IsString()
-    synopsis?: string;
+  @IsOptional()
+  @IsString()
+  synopsis?: string;
 
-    @IsOptional()
-    @IsNumber()
-    score?: number;
+  @IsOptional()
+  @IsNumber()
+  score?: number;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
