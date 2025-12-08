@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Trash2, LayoutGrid, List, Table } from "lucide-react"
+import { Loader2, Trash2, LayoutGrid, List, Table, Pen } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Anime = {
     mal_id: number
@@ -53,6 +59,14 @@ export default function MyListPage() {
 
     function handleRemoveAnime(id: number) {
         const updated = animes.filter(a => a.mal_id !== id)
+        setAnimes(updated)
+        localStorage.setItem('myAnimeList', JSON.stringify(updated))
+    }
+
+    function handleChangeStatus(id: number, newStatus: 'à regarder' | 'en cours' | 'terminé') {
+        const updated = animes.map(a => 
+            a.mal_id === id ? { ...a, status: newStatus } : a
+        )
         setAnimes(updated)
         localStorage.setItem('myAnimeList', JSON.stringify(updated))
     }
@@ -157,12 +171,52 @@ export default function MyListPage() {
                                                 onClick={() => router.push(`/explorer/${anime.mal_id}`)}
                                             >
                                                 <div className="aspect-3/4 relative overflow-hidden bg-muted">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                variant="secondary"
+                                                                size="icon"
+                                                                className="absolute top-2 right-2 z-10 h-7 w-7 bg-secondary/90 hover:bg-secondary"
+                                                                aria-label="Modifier le statut"
+                                                            >
+                                                                <Pen className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                                                            <DropdownMenuItem
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleChangeStatus(anime.mal_id, 'à regarder')
+                                                                }}
+                                                            >
+                                                                À regarder
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleChangeStatus(anime.mal_id, 'en cours')
+                                                                }}
+                                                            >
+                                                                En cours
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleChangeStatus(anime.mal_id, 'terminé')
+                                                                }}
+                                                            >
+                                                                Terminé
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             handleRemoveAnime(anime.mal_id)
                                                         }}
-                                                        className="absolute top-2 right-2 z-10 p-1.5 rounded-md bg-destructive/90 hover:bg-destructive text-destructive-foreground shadow-sm transition-all"
+                                                        className="absolute top-2 right-11 z-10 p-1.5 rounded-md bg-destructive/90 hover:bg-destructive text-destructive-foreground shadow-sm transition-all"
                                                         aria-label="Supprimer"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
@@ -244,17 +298,57 @@ export default function MyListPage() {
                                                                 )}
                                                             </div>
 
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    handleRemoveAnime(anime.mal_id)
-                                                                }}
-                                                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                                                            <div className="flex gap-2">
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                        >
+                                                                            <Pen className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                                                                        <DropdownMenuItem
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleChangeStatus(anime.mal_id, 'à regarder')
+                                                                            }}
+                                                                        >
+                                                                            À regarder
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleChangeStatus(anime.mal_id, 'en cours')
+                                                                            }}
+                                                                        >
+                                                                            En cours
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleChangeStatus(anime.mal_id, 'terminé')
+                                                                            }}
+                                                                        >
+                                                                            Terminé
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        handleRemoveAnime(anime.mal_id)
+                                                                    }}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -317,17 +411,57 @@ export default function MyListPage() {
                                                                 )}
                                                             </td>
                                                             <td className="p-4 text-right">
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation()
-                                                                        handleRemoveAnime(anime.mal_id)
-                                                                    }}
-                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
+                                                                <div className="flex justify-end gap-2">
+                                                                    <DropdownMenu>
+                                                                        <DropdownMenuTrigger asChild>
+                                                                            <Button
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                            >
+                                                                                <Pen className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </DropdownMenuTrigger>
+                                                                        <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                                                                            <DropdownMenuItem
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    handleChangeStatus(anime.mal_id, 'à regarder')
+                                                                                }}
+                                                                            >
+                                                                                À regarder
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuItem
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    handleChangeStatus(anime.mal_id, 'en cours')
+                                                                                }}
+                                                                            >
+                                                                                En cours
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuItem
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                    handleChangeStatus(anime.mal_id, 'terminé')
+                                                                                }}
+                                                                            >
+                                                                                Terminé
+                                                                            </DropdownMenuItem>
+                                                                        </DropdownMenuContent>
+                                                                    </DropdownMenu>
+
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            handleRemoveAnime(anime.mal_id)
+                                                                        }}
+                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
